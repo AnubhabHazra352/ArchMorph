@@ -24,11 +24,18 @@ export const createProject = async ({ item, visibility = "private" }: CreateProj
 
     const hosting = await getOrCreateHostingConfig();
 
-    const hostedSource = projectId ?
-        await uploadImageToHosting({ hosting, url: item.sourceImage, projectId, label: 'source', }) : null;
+    // Attempt to upload source and rendered images to puter hosting.
+    const hostedSource = projectId
+        ? await uploadImageToHosting({ hosting, url: item.sourceImage, projectId, label: 'source' })
+        : null;
 
-    const hostedRender = projectId && item.renderedImage ?
-        await uploadImageToHosting({ hosting, url: item.renderedImage, projectId, label: 'rendered', }) : null;
+    const hostedRender = projectId && item.renderedImage
+        ? await uploadImageToHosting({ hosting, url: item.renderedImage, projectId, label: 'rendered' })
+        : null;
+
+    if (import.meta.env.DEV) {
+        console.debug('createProject hosting result:', { hosting, hostedSource, hostedRender });
+    }
 
     const resolvedSource = hostedSource?.url || (isHostedUrl(item.sourceImage)
         ? item.sourceImage
@@ -36,7 +43,7 @@ export const createProject = async ({ item, visibility = "private" }: CreateProj
     );
 
     if(!resolvedSource) {
-        console.warn('Failed to host source image, skipping save.')
+        console.error('Failed to host source image, skipping save.', { item, hosting, hostedSource });
         return null;
     }
 
@@ -60,24 +67,28 @@ export const createProject = async ({ item, visibility = "private" }: CreateProj
     }
 
     try {
-        const response = await puter.workers.exec(`${PUTER_WORKER_URL}/api/projects/save`, {
+        const url = `${PUTER_WORKER_URL}/api/projects/save`;
+
+        if (import.meta.env.DEV) console.debug('Saving project to', url, 'payload', payload);
+
+        const response = await puter.workers.exec(url, {
             method: 'POST',
-            body: JSON.stringify({
-                project: payload,
-                visibility
-            })
+            body: JSON.stringify({ project: payload, visibility })
         });
 
-        if(!response.ok) {
-            console.error('failed to save the project', await response.text());
+        if (!response.ok) {
+            const text = await response.text().catch(() => '<unable to read response body>');
+            console.error('failed to save the project', { status: response.status, text });
             return null;
         }
 
-        const data = (await response.json()) as { project?: DesignItem | null }
+        const data = (await response.json()) as { project?: DesignItem | null };
+
+        if (import.meta.env.DEV) console.debug('Project saved response:', data);
 
         return data?.project ?? null;
     } catch (e) {
-        console.log('Failed to save project', e)
+        console.error('Failed to save project', e, { payload });
         return null;
     }
 }

@@ -1,4 +1,28 @@
-export const PUTER_WORKER_URL = import.meta.env.VITE_PUTER_WORKER_URL || "";
+// Resolve PUTER worker URL from multiple possible runtime sources to
+// tolerate different dev servers / runtimes. Prefer Vite-provided env,
+// then a global set on `window`, then Node `process.env` as a last resort.
+let _workerUrl = import.meta.env.VITE_PUTER_WORKER_URL || "";
+if (!__DEV__ && typeof __DEV__ === 'boolean') {
+    // no-op to keep linter happy in different environments
+}
+
+if (!(_workerUrl && _workerUrl.length)) {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const w = (typeof window !== 'undefined' ? (window as any) : null);
+        _workerUrl = _workerUrl || (w && w.__PUTER_WORKER_URL__) || process?.env?.VITE_PUTER_WORKER_URL || "";
+    } catch (e) {
+        _workerUrl = _workerUrl || "";
+    }
+}
+
+export const PUTER_WORKER_URL = _workerUrl;
+
+if (import.meta.env.DEV) {
+    // Helpful debug log during development to ensure env is loaded
+    // eslint-disable-next-line no-console
+    console.debug("Resolved PUTER_WORKER_URL:", PUTER_WORKER_URL);
+}
 
 // Storage Paths
 export const STORAGE_PATHS = {
