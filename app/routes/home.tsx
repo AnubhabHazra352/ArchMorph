@@ -3,7 +3,7 @@ import Navbar from "../../components/Navbar";
 import {ArrowRight, ArrowUpRight, Clock, Layers} from "lucide-react";
 import Button from "../../components/ui/Button";
 import Upload from "../../components/Upload";
-import {useNavigate} from "react-router";
+import {useNavigate, useOutletContext} from "react-router-dom";
 import {useEffect, useRef, useState} from "react";
 import {createProject, getProjects} from "../../lib/puter.action";
 
@@ -17,6 +17,7 @@ export function meta(args: Route["MetaArgs"]) {
 export default function Home() {
     const navigate = useNavigate();
     const [projects, setProjects] = useState<DesignItem[]>([]);
+    const {  userName } = useOutletContext<AuthContext>()
     const isCreatingProjectRef = useRef(false);
 
     const handleUploadComplete = async (base64Image: string) => {
@@ -76,7 +77,7 @@ export default function Home() {
                       <div className="pulse"></div>
                   </div>
 
-                  <p>Introducing Roomify 2.0</p>
+                  <p>Introducing ArchMorph 2.0</p>
               </div>
 
               <h1>Build beautiful spaces at the speed of thought with Roomify</h1>
@@ -105,7 +106,7 @@ export default function Home() {
                           </div>
 
                           <h3>Upload your floor plan</h3>
-                          <p>Supports JPG, PNG, formats up to 10MB</p>
+                          <p>Supports JPG, PNG, WEBP formats up to 10MB</p>
                       </div>
 
                       <Upload onComplete={handleUploadComplete} />
@@ -141,7 +142,7 @@ export default function Home() {
                                       <div className="meta">
                                           <Clock size={12} />
                                           <span>{new Date(timestamp).toLocaleDateString()}</span>
-                                          <span>By JS Mastery</span>
+                                          <span>{userName}</span>
                                       </div>
                                   </div>
                                   <div className="arrow">

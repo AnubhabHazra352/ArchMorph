@@ -1,4 +1,4 @@
-import { useNavigate, useOutletContext, useParams} from "react-router";
+import { useNavigate, useOutletContext, useParams} from "react-router-dom";
 import {useEffect, useRef, useState} from "react";
 import {generate3DView} from "../../lib/ai.action";
 import {Box, Download, RefreshCcw, Share2, X} from "lucide-react";
@@ -58,7 +58,12 @@ const VisualizerId = () => {
                 }
             }
         } catch (error) {
-            console.error('Generation failed: ', error)
+            console.error('Generation failed:', error);
+            try {
+                console.error('Generation error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+            } catch (e) {
+                console.error('Could not stringify generation error', e);
+            }
         } finally {
             setIsProcessing(false);
         }
@@ -116,7 +121,7 @@ const VisualizerId = () => {
                 <div className="brand">
                     <Box className="logo" />
 
-                    <span className="name">Roomify</span>
+                    <span className="name">ArchMorph</span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleBack} className="exit">
                     <X className="icon" /> Exit Editor
@@ -141,10 +146,7 @@ const VisualizerId = () => {
                             >
                                 <Download className="w-4 h-4 mr-2" /> Export
                             </Button>
-                            <Button size="sm" onClick={() => {}} className="share">
-                                <Share2 className="w-4 h-4 mr-2" />
-                                Share
-                            </Button>
+                            
                         </div>
                     </div>
 
@@ -190,7 +192,7 @@ const VisualizerId = () => {
                                     <ReactCompareSliderImage src={project?.sourceImage} alt="before" className="compare-img" />
                                 }
                                 itemTwo={
-                                    <ReactCompareSliderImage src={currentImage || project?.renderedImage} alt="after" className="compare-img" />
+                                    <ReactCompareSliderImage src={currentImage ?? project?.renderedImage} alt="after" className="compare-img" />
                                 }
                             />
                         ) : (

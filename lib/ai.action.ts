@@ -19,29 +19,44 @@ export const fetchAsDataUrl = async (url: string): Promise<string> => {
 };
 
 export const generate3DView = async ({ sourceImage }: Generate3DViewParams) => {
-    const dataUrl = sourceImage.startsWith('data:')
-        ? sourceImage
-        : await fetchAsDataUrl(sourceImage);
+  try {
+    const dataUrl = sourceImage.startsWith("data:")
+      ? sourceImage
+      : await fetchAsDataUrl(sourceImage);
 
-    const base64Data = dataUrl.split(',')[1];
-    const mimeType = dataUrl.split(';')[0].split(':')[1];
+    const parts = dataUrl.split(",");
+    const base64Data = parts[1];
+    const mimeType = dataUrl.split(";")[0].split(":")[1] || "";
 
-    if(!mimeType || !base64Data) throw new Error('Invalid source image payload');
+    if (!mimeType || !base64Data) throw new Error("Invalid source image payload");
 
     const response = await puter.ai.txt2img(ROOMIFY_RENDER_PROMPT, {
-        provider: "gemini",
-        model: "gemini-2.5-flash-image-preview",
-        input_image: base64Data,
-        input_image_mime_type: mimeType,
-        ratio: { w: 1024, h: 1024 },
+      provider: "gemini",
+      model: "gemini-2.5-flash-image-preview",
+      input_image: base64Data,
+      input_image_mime_type: mimeType,
+      ratio: { w: 1024, h: 1024 },
     });
 
-    const rawImageUrl = (response as HTMLImageElement).src ?? null;
+    const rawImageUrl = (response as HTMLImageElement)?.src ?? null;
 
-    if (!rawImageUrl) return { renderedImage: null, renderedPath: undefined };
+    if (!rawImageUrl) {
+      console.error("txt2img returned no image URL:", response);
+      return { renderedImage: null, renderedPath: undefined };
+    }
 
-    const renderedImage = rawImageUrl.startsWith('data:')
-    ? rawImageUrl : await fetchAsDataUrl(rawImageUrl);
+    const renderedImage = rawImageUrl.startsWith("data:")
+      ? rawImageUrl
+      : await fetchAsDataUrl(rawImageUrl);
 
     return { renderedImage, renderedPath: undefined };
+  } catch (err) {
+    console.error("generate3DView failed:", err);
+    try {
+      console.error("generate3DView error details:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    } catch (e) {
+      console.error("Could not stringify error object", e);
+    }
+    throw err;
+  }
 }

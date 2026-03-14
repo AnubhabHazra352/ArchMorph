@@ -1,6 +1,6 @@
 import {Box} from "lucide-react";
 import Button from "./ui/Button";
-import {useOutletContext} from "react-router";
+import {useOutletContext} from "react-router-dom";
 
 const Navbar = () => {
     const { isSignedIn, userName, signIn, signOut } = useOutletContext<AuthContext>()
@@ -31,7 +31,7 @@ const Navbar = () => {
                         <Box  className="logo" />
 
                         <span className="name">
-                            Roomify
+                            ArchMorph
                         </span>
                     </div>
 
