@@ -17,7 +17,7 @@ export function meta(args: Route["MetaArgs"]) {
 export default function Home() {
     const navigate = useNavigate();
     const [projects, setProjects] = useState<DesignItem[]>([]);
-    const {  userName } = useOutletContext<AuthContext>()
+    const { isSignedIn, userName, signIn } = useOutletContext<AuthContext>()
     const isCreatingProjectRef = useRef(false);
 
     const handleUploadComplete = async (base64Image: string) => {
@@ -34,10 +34,22 @@ export default function Home() {
                 timestamp: Date.now()
             }
 
-            const saved = await createProject({ item: newItem, visibility: 'private' });
+            let saved = await createProject({ item: newItem, visibility: 'private' });
+
+            // If save failed and user is not signed in, prompt sign in and retry once.
+            if (!saved && !isSignedIn) {
+                try {
+                    const signed = await signIn?.();
+                    if (signed) {
+                        saved = await createProject({ item: newItem, visibility: 'private' });
+                    }
+                } catch (e) {
+                    console.error('Sign in failed during createProject retry', e);
+                }
+            }
 
             if(!saved) {
-                console.error("Failed to create project");
+                console.error("Failed to create project", { item: newItem });
                 return false;
             }
 
