@@ -2,9 +2,6 @@
 // tolerate different dev servers / runtimes. Prefer Vite-provided env,
 // then a global set on `window`, then Node `process.env` as a last resort.
 let _workerUrl = import.meta.env.VITE_PUTER_WORKER_URL || "";
-if (!__DEV__ && typeof __DEV__ === 'boolean') {
-    // no-op to keep linter happy in different environments
-}
 
 if (!(_workerUrl && _workerUrl.length)) {
     try {
@@ -18,7 +15,7 @@ if (!(_workerUrl && _workerUrl.length)) {
 
 export const PUTER_WORKER_URL = _workerUrl;
 
-if (import.meta.env.DEV) {
+if (import.meta.env && import.meta.env.DEV) {
     // Helpful debug log during development to ensure env is loaded
     // eslint-disable-next-line no-console
     console.debug("Resolved PUTER_WORKER_URL:", PUTER_WORKER_URL);
